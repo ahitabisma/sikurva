@@ -1,7 +1,6 @@
 !/node_modules/laravel/framework/src/Illuminate/Auth/Middleware/RedirectIfAuthenticated.php
 /.phpunit.cache
 /node_modules
-/public/build
 /public/hot
 /public/sitemap.xml
 /storage/*
