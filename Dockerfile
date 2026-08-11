@@ -10,7 +10,7 @@ COPY resources/js resources/js
 RUN npm run build
 
 # Stage 2: PHP runtime
-FROM php:8.3-fpm-alpine
+FROM php:8.3-cli-alpine
 
 RUN apk add --no-cache \
         freetype libpng libjpeg-turbo oniguruma libzip icu curl libxml2 \
@@ -26,6 +26,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Tahap 1: install dependency saja, tanpa menjalankan script/autoload
+# (source code app belum ada, jadi script post-install seperti
+# package:discover atau file custom belum bisa dijalankan)
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --no-scripts --no-autoloader
 
@@ -38,10 +40,9 @@ RUN composer dump-autoload --optimize --no-dev \
     && php artisan package:discover --ansi
 
 # Pastikan folder runtime yang isinya di-.dockerignore tetap ada strukturnya
-# (storage/app/private sudah ikut ter-copy dari git, sisanya kosong by design)
 RUN mkdir -p storage/app/private \
         storage/app/public \
-        storage/framework/cache \
+        storage/framework/cache/data \
         storage/framework/sessions \
         storage/framework/testing \
         storage/framework/views \
@@ -50,14 +51,8 @@ RUN mkdir -p storage/app/private \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Buat symlink public/storage -> storage/app/public (kalau digunakan)
 RUN php artisan storage:link || true
 
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
+EXPOSE 8000
 
-RUN sed -i 's/^listen = .*/listen = 8010/' /usr/local/etc/php-fpm.d/www.conf
-
-EXPOSE 8010
-CMD ["php-fpm"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
