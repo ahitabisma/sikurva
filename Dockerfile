@@ -29,7 +29,7 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --no-scripts --no-autoloader
 
-# Copy seluruh source code aplikasi
+# Copy seluruh source code aplikasi (termasuk storage/app/private/template_table)
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 
@@ -37,17 +37,21 @@ COPY --from=frontend /app/public/build ./public/build
 RUN composer dump-autoload --optimize --no-dev \
     && php artisan package:discover --ansi
 
-# Pastikan struktur folder storage & cache selalu ada,
-# karena folder ini sering kosong di Git dan tidak ikut ter-copy
-RUN mkdir -p storage/framework/cache \
+# Pastikan folder runtime yang isinya di-.dockerignore tetap ada strukturnya
+# (storage/app/private sudah ikut ter-copy dari git, sisanya kosong by design)
+RUN mkdir -p storage/app/private \
+        storage/app/public \
+        storage/framework/cache \
         storage/framework/sessions \
         storage/framework/testing \
         storage/framework/views \
         storage/logs \
-        storage/app/public \
         bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
+
+# Buat symlink public/storage -> storage/app/public (kalau digunakan)
+RUN php artisan storage:link || true
 
 RUN php artisan config:clear \
     && php artisan route:clear \
