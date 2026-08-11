@@ -26,12 +26,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Tahap 1: install dependency saja, tanpa menjalankan script/autoload
-# (source code app belum ada, jadi script post-install seperti
-# package:discover atau file custom belum bisa dijalankan)
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --no-scripts --no-autoloader
 
-# Copy seluruh source code aplikasi (termasuk storage/app/private/template_table)
+# Copy seluruh source code aplikasi
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 
@@ -39,7 +37,7 @@ COPY --from=frontend /app/public/build ./public/build
 RUN composer dump-autoload --optimize --no-dev \
     && php artisan package:discover --ansi
 
-# Pastikan folder runtime yang isinya di-.dockerignore tetap ada strukturnya
+# Buat struktur folder storage saat build (untuk kasus tanpa bind mount / fresh image)
 RUN mkdir -p storage/app/private \
         storage/app/public \
         storage/framework/cache/data \
@@ -53,6 +51,11 @@ RUN mkdir -p storage/app/private \
 
 RUN php artisan storage:link || true
 
+# Entrypoint yang memastikan folder tetap ada meski storage di-bind-mount dari host
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 8000
 
+ENTRYPOINT ["docker/entrypoint.sh"]
 CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
