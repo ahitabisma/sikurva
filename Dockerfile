@@ -26,21 +26,27 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Tahap 1: install dependency saja, tanpa menjalankan script/autoload
-# (source code app belum ada, jadi script Laravel seperti package:discover
-# atau file custom seperti helper/function.php belum bisa dijalankan)
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --no-scripts --no-autoloader
 
-# Sekarang baru copy seluruh source code aplikasi
+# Copy seluruh source code aplikasi
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 
-# Tahap 2: baru generate autoloader + jalankan script post-install
-# sekarang semua file app (termasuk helper/function.php) sudah ada
+# Tahap 2: generate autoloader + jalankan script post-install
 RUN composer dump-autoload --optimize --no-dev \
     && php artisan package:discover --ansi
 
-RUN chown -R www-data:www-data storage bootstrap/cache \
+# Pastikan struktur folder storage & cache selalu ada,
+# karena folder ini sering kosong di Git dan tidak ikut ter-copy
+RUN mkdir -p storage/framework/cache \
+        storage/framework/sessions \
+        storage/framework/testing \
+        storage/framework/views \
+        storage/logs \
+        storage/app/public \
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 RUN php artisan config:clear \
