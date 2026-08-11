@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@source "../views";
+
+@plugin "daisyui" {
+    themes: bumblebee --default;
+}

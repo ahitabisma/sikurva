@@ -1,0 +1,69 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Proteksi file sensitif
+	<FilesMatch "^\.env|\.git|composer\.(json|lock)|package\.json|artisan|server\.php|phpunit\.xml|readme\.md|license\.txt|changelog\.md$">
+        Order Allow,Deny
+        Deny from all
+    </FilesMatch>
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+	# Redirect HTTP ke HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301,NE]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+
+	# Tambahan proteksi terhadap eksekusi file berbahaya
+    <FilesMatch "\.(php[0-7]?|phtml|phps)$">
+        Order Allow,Deny
+        Deny from all
+    </FilesMatch>
+    <Files index.php>
+        Order Allow,Deny
+        Allow from all
+    </Files>
+
+	# Cegah akses ke file konfigurasi dan log
+    <FilesMatch "(^config\.php|storage/logs/.*\.log)$">
+        Order Allow,Deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Tambahan keamanan header
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+	Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
+
+</IfModule>
+
+# Cegah MIME type sniffing
+<IfModule mod_mime.c>
+    AddType application/x-httpd-php .php
+</IfModule>

@@ -1,0 +1,39 @@
+services:
+    app:
+        container_name: sikurva
+        build: .
+        volumes:
+            - .env:/var/www/html/.env:ro
+            - app-storage:/var/www/html/storage
+        networks:
+            - together-network
+        restart: unless-stopped
+
+    queue:
+        container_name: sikurva-queue
+        build: .
+        command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+        volumes:
+            - .env:/var/www/html/.env:ro
+            - app-storage:/var/www/html/storage
+        networks:
+            - together-network
+        restart: unless-stopped
+
+    scheduler:
+        container_name: sikurva-scheduler
+        build: .
+        command: /bin/sh -c "echo '* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1' > /etc/crontabs/root && crond -f -l 2"
+        volumes:
+            - .env:/var/www/html/.env:ro
+            - app-storage:/var/www/html/storage
+        networks:
+            - together-network
+        restart: unless-stopped
+
+volumes:
+    app-storage:
+
+networks:
+    together-network:
+        external: true
