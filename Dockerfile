@@ -57,5 +57,7 @@ RUN php artisan config:clear \
     && php artisan route:clear \
     && php artisan view:clear
 
-EXPOSE 9000
+RUN sed -i 's/^listen = .*/listen = 8010/' /usr/local/etc/php-fpm.d/www.conf
+
+EXPOSE 8010
 CMD ["php-fpm"]
