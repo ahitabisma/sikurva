@@ -3,7 +3,7 @@ FROM node:22-alpine AS frontend
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm i
 COPY vite.config.js postcss.config.js tailwind.config.js ./
 COPY resources/css resources/css
 COPY resources/js resources/js
@@ -25,12 +25,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Tahap 1: install dependency saja, tanpa menjalankan script/autoload
+# Tahap 1: install dependency PHP saja, tanpa menjalankan script/autoload
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --no-scripts --no-autoloader
 
 # Copy seluruh source code aplikasi
 COPY . .
+
+# Copy hasil build frontend dari stage pertama
 COPY --from=frontend /app/public/build ./public/build
 
 # Tahap 2: generate autoloader + jalankan script post-install
@@ -53,9 +55,10 @@ RUN php artisan storage:link || true
 
 # Entrypoint yang memastikan folder tetap ada meski storage di-bind-mount dari host
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+    && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
 
 EXPOSE 8000
 
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
