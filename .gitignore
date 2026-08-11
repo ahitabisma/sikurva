@@ -5,6 +5,7 @@
 /public/hot
 /public/sitemap.xml
 /storage/*
+!/storage/app/private/template_table
 /public/storage
 /public/img-public
 /storage/*.key
