@@ -168,17 +168,17 @@ isModalOpen = false">
     @yield('script')
 
     <script>
-        // Nonaktifkan klik kanan
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        // // Nonaktifkan klik kanan
+        // document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Nonaktifkan F12 dan inspect shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === "F12" ||
-                (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) ||
-                (e.ctrlKey && e.key === 'u')) {
-                e.preventDefault();
-            }
-        });
+        // // Nonaktifkan F12 dan inspect shortcuts
+        // document.addEventListener('keydown', function(e) {
+        //     if (e.key === "F12" ||
+        //         (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) ||
+        //         (e.ctrlKey && e.key === 'u')) {
+        //         e.preventDefault();
+        //     }
+        // });
     </script>
 
     {{-- Pagination Notificatin --}}

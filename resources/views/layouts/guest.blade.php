@@ -46,12 +46,12 @@
     <script src="{{ asset('tailadmin/build/bundle.js') }}"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @if (file_exists(public_path('build/manifest.json')))
+    {{-- @if (file_exists(public_path('build/manifest.json')))
         <link rel="stylesheet" href="{{ asset_vite('resources/css/app.css') }}">
         <script type="module" src="{{ asset_vite('resources/js/app.js') }}"></script>
     @elseif (file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    @endif --}}
 
 </head>
 
